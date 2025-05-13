@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage, MemStorage } from "./storage";
+import { storage } from "./storage";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import passport from "passport";
