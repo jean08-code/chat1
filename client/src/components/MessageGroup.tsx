@@ -2,14 +2,16 @@ import { format } from "date-fns";
 import { Message, User } from "@shared/schema";
 import { AvatarWithStatus } from "@/components/ui/avatar-with-status";
 import ReadReceipt from "@/components/ReadReceipt";
+import MessageOptions from "@/components/MessageOptions";
 
 interface MessageGroupProps {
   messages: Message[];
   isOutgoing: boolean;
   sender: User | null;
+  contactId?: number;
 }
 
-export default function MessageGroup({ messages, isOutgoing, sender }: MessageGroupProps) {
+export default function MessageGroup({ messages, isOutgoing, sender, contactId = 0 }: MessageGroupProps) {
   if (!sender || messages.length === 0) return null;
 
   // Format the message timestamp
@@ -52,9 +54,15 @@ export default function MessageGroup({ messages, isOutgoing, sender }: MessageGr
                 px-4 py-2 shadow-sm
                 ${isLast ? "" : "mb-1"}
                 animate-in fade-in-0 slide-in-from-bottom-5
+                relative group
               `}
             >
               <p>{message.content}</p>
+              <MessageOptions 
+                messageId={message.id} 
+                contactId={contactId} 
+                isOutgoing={isOutgoing} 
+              />
             </div>
           );
         })}

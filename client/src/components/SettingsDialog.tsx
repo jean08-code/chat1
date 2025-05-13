@@ -29,13 +29,17 @@ export default function SettingsDialog() {
   const { toast } = useToast();
   
   // Get user settings
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings, isLoading } = useQuery<UserSettingsPayload>({
     queryKey: ["/api/user/settings"],
-    onSuccess: (data) => {
-      setLocalSettings(data);
-    },
     enabled: isOpen, // Only fetch when dialog is open
   });
+  
+  // Update local settings when data changes
+  useEffect(() => {
+    if (settings) {
+      setLocalSettings(settings);
+    }
+  }, [settings]);
   
   // Update user settings
   const { mutate: updateSettings, isPending } = useMutation({
@@ -61,9 +65,9 @@ export default function SettingsDialog() {
   
   // Settings options with labels
   const settingsWithLabels: SettingsWithLabel = {
-    darkMode: { value: localSettings.darkMode || false, label: "Dark Mode" },
-    notifications: { value: localSettings.notifications || true, label: "Notifications" },
-    sound: { value: localSettings.sound || true, label: "Sound Effects" },
+    darkMode: { value: Boolean(localSettings.darkMode), label: "Dark Mode" },
+    notifications: { value: localSettings.notifications !== false, label: "Notifications" },
+    sound: { value: localSettings.sound !== false, label: "Sound Effects" },
     language: { 
       value: localSettings.language || "en", 
       label: "Language",
@@ -81,7 +85,7 @@ export default function SettingsDialog() {
   const handleToggleSetting = (key: "darkMode" | "notifications" | "sound") => {
     setLocalSettings({
       ...localSettings,
-      [key]: !localSettings[key]
+      [key]: !(localSettings[key] as boolean)
     });
   };
   
@@ -129,7 +133,7 @@ export default function SettingsDialog() {
                   </Label>
                   <Switch
                     id={key}
-                    checked={setting.value}
+                    checked={Boolean(setting.value)}
                     onCheckedChange={() => handleToggleSetting(key as "darkMode" | "notifications" | "sound")}
                   />
                 </div>

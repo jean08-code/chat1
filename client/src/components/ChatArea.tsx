@@ -196,6 +196,7 @@ export default function ChatArea({
                       messages={group}
                       isOutgoing={group[0].senderId === currentUser?.id}
                       sender={group[0].senderId === currentUser?.id ? currentUser : selectedContact}
+                      contactId={selectedContact.id}
                     />
                   ))}
                 </div>

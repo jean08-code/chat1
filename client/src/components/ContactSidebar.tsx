@@ -4,12 +4,13 @@ import { format } from "date-fns";
 import { AvatarWithStatus } from "@/components/ui/avatar-with-status";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Search, Plus, Settings } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import TypingIndicator from "@/components/TypingIndicator";
 import { User, Message } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import SettingsDialog from "@/components/SettingsDialog";
 
 interface ContactSidebarProps {
   currentUser: User | null;
@@ -196,13 +197,7 @@ export default function ContactSidebar({
             </div>
           </div>
           <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
+            <SettingsDialog />
             <Button
               variant="ghost"
               size="sm"
