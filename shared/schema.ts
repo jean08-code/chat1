@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -10,6 +10,12 @@ export const users = pgTable("users", {
   avatar: text("avatar").notNull(),
   lastActive: timestamp("last_active").notNull().defaultNow(),
   isOnline: boolean("is_online").notNull().default(false),
+  settings: jsonb("settings").default({
+    darkMode: false,
+    notifications: true,
+    sound: true,
+    language: "en",
+  }),
 });
 
 export const messages = pgTable("messages", {
@@ -19,6 +25,7 @@ export const messages = pgTable("messages", {
   content: text("content").notNull(),
   timestamp: timestamp("timestamp").notNull().defaultNow(),
   isRead: boolean("is_read").notNull().default(false),
+  isDeleted: boolean("is_deleted").notNull().default(false),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -53,9 +60,24 @@ export const updateMessageReadSchema = z.object({
 
 export type UpdateMessageReadPayload = z.infer<typeof updateMessageReadSchema>;
 
+export const deleteMessageSchema = z.object({
+  messageId: z.number(),
+});
+
+export type DeleteMessagePayload = z.infer<typeof deleteMessageSchema>;
+
 export const typingStatusSchema = z.object({
   receiverId: z.number(),
   isTyping: z.boolean(),
 });
 
 export type TypingStatusPayload = z.infer<typeof typingStatusSchema>;
+
+export const userSettingsSchema = z.object({
+  darkMode: z.boolean().optional(),
+  notifications: z.boolean().optional(),
+  sound: z.boolean().optional(),
+  language: z.string().optional(),
+});
+
+export type UserSettingsPayload = z.infer<typeof userSettingsSchema>;

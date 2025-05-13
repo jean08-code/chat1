@@ -4,7 +4,8 @@ import {
   type User,
   type InsertUser, 
   type Message, 
-  type InsertMessage 
+  type InsertMessage,
+  type UserSettingsPayload
 } from "@shared/schema";
 
 export interface IStorage {
@@ -15,11 +16,13 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   setUserOnlineStatus(id: number, isOnline: boolean): Promise<void>;
   updateUserLastActive(id: number): Promise<void>;
+  updateUserSettings(id: number, settings: UserSettingsPayload): Promise<User>;
   
   // Message methods
   getMessages(senderId: number, receiverId: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(messageIds: number[]): Promise<void>;
+  deleteMessage(messageId: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -96,7 +99,13 @@ export class MemStorage implements IStorage {
       ...insertUser, 
       id, 
       lastActive: now, 
-      isOnline: false 
+      isOnline: false,
+      settings: {
+        darkMode: false,
+        notifications: true,
+        sound: true,
+        language: "en"
+      }
     };
     this.users.set(id, user);
     return user;
@@ -120,13 +129,46 @@ export class MemStorage implements IStorage {
     }
   }
 
+  async updateUserSettings(id: number, newSettings: UserSettingsPayload): Promise<User> {
+    const user = await this.getUser(id);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    
+    // Define default settings if none exist
+    const currentSettings = user.settings || {
+      darkMode: false,
+      notifications: true,
+      sound: true,
+      language: "en"
+    };
+    
+    // Merge the existing settings with the new settings
+    const updatedSettings = {
+      ...currentSettings,
+      ...newSettings
+    };
+    
+    const updatedUser = {
+      ...user,
+      settings: updatedSettings
+    };
+    
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
   // Message methods
   async getMessages(senderId: number, receiverId: number): Promise<Message[]> {
-    return Array.from(this.messages.values()).filter(
-      (message) => 
-        (message.senderId === senderId && message.receiverId === receiverId) || 
-        (message.senderId === receiverId && message.receiverId === senderId)
-    ).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    return Array.from(this.messages.values())
+      .filter(
+        (message) => 
+          !message.isDeleted && (
+            (message.senderId === senderId && message.receiverId === receiverId) || 
+            (message.senderId === receiverId && message.receiverId === senderId)
+          )
+      )
+      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
   }
 
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
@@ -136,6 +178,7 @@ export class MemStorage implements IStorage {
       id,
       timestamp: new Date(),
       isRead: false,
+      isDeleted: false
     };
     this.messages.set(id, message);
     return message;
@@ -147,6 +190,13 @@ export class MemStorage implements IStorage {
       if (message) {
         this.messages.set(id, { ...message, isRead: true });
       }
+    }
+  }
+
+  async deleteMessage(messageId: number): Promise<void> {
+    const message = this.messages.get(messageId);
+    if (message) {
+      this.messages.set(messageId, { ...message, isDeleted: true });
     }
   }
 }

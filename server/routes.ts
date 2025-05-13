@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage, MemStorage } from "./storage";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import passport from "passport";
@@ -9,7 +9,9 @@ import {
   loginSchema, 
   insertMessageSchema, 
   updateMessageReadSchema,
-  typingStatusSchema
+  typingStatusSchema,
+  deleteMessageSchema,
+  userSettingsSchema
 } from "@shared/schema";
 import { ZodError } from "zod";
 
@@ -224,6 +226,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: error.errors[0].message });
       }
       res.status(500).json({ message: "Failed to mark messages as read" });
+    }
+  });
+
+  // Delete message
+  app.post("/api/messages/delete", isAuthenticated, async (req, res) => {
+    try {
+      const payload = deleteMessageSchema.parse(req.body);
+      const currentUserId = (req.user as any).id;
+      
+      // Get message to verify ownership - use the getMessages function
+      const allMessages = await storage.getMessages(currentUserId, 0); // Temporary: retrieve all messages
+      const message = allMessages.find(msg => msg.id === payload.messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      
+      // Only allow deleting your own messages
+      if (message.senderId !== currentUserId) {
+        return res.status(403).json({ message: "You can only delete your own messages" });
+      }
+      
+      await storage.deleteMessage(payload.messageId);
+      
+      // Update user last active
+      await storage.updateUserLastActive(currentUserId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      res.status(500).json({ message: "Failed to delete message" });
+    }
+  });
+  
+  // User Settings
+  app.get("/api/user/settings", isAuthenticated, async (req, res) => {
+    try {
+      const currentUserId = (req.user as any).id;
+      const user = await storage.getUser(currentUserId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(user.settings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user settings" });
+    }
+  });
+  
+  app.post("/api/user/settings", isAuthenticated, async (req, res) => {
+    try {
+      const currentUserId = (req.user as any).id;
+      const payload = userSettingsSchema.parse(req.body);
+      
+      const updatedUser = await storage.updateUserSettings(currentUserId, payload);
+      
+      // Update user last active
+      await storage.updateUserLastActive(currentUserId);
+      
+      res.json(updatedUser.settings);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      res.status(500).json({ message: "Failed to update user settings" });
     }
   });
 
