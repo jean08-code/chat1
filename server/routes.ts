@@ -7,6 +7,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { 
   loginSchema, 
+  insertUserSchema,
   insertMessageSchema, 
   updateMessageReadSchema,
   typingStatusSchema,
@@ -80,6 +81,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Auth routes
+  app.post("/api/register", async (req, res, next) => {
+    try {
+      const payload = insertUserSchema.parse(req.body);
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(payload.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+      
+      // Create new user
+      const user = await storage.createUser(payload);
+      
+      // Log the user in automatically
+      req.logIn(user, async (err) => {
+        if (err) {
+          return next(err);
+        }
+        
+        // Update user status
+        await storage.setUserOnlineStatus(user.id, true);
+        await storage.updateUserLastActive(user.id);
+        
+        return res.status(201).json({ 
+          id: user.id, 
+          username: user.username, 
+          displayName: user.displayName, 
+          avatar: user.avatar 
+        });
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      next(error);
+    }
+  });
+
   app.post("/api/login", (req, res, next) => {
     try {
       const payload = loginSchema.parse(req.body);
