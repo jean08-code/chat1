@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { AvatarWithStatus } from "@/components/ui/avatar-with-status";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import TypingIndicator from "@/components/TypingIndicator";

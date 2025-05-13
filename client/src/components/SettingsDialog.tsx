@@ -29,15 +29,22 @@ export default function SettingsDialog() {
   const { toast } = useToast();
   
   // Get user settings
-  const { data: settings, isLoading } = useQuery<UserSettingsPayload>({
+  const { data: settings, isLoading } = useQuery({
     queryKey: ["/api/user/settings"],
     enabled: isOpen, // Only fetch when dialog is open
   });
   
-  // Update local settings when data changes
+  // Update local settings when data changes and apply dark mode
   useEffect(() => {
     if (settings) {
-      setLocalSettings(settings);
+      setLocalSettings(settings as UserSettingsPayload);
+      
+      // Apply dark mode setting
+      if ((settings as UserSettingsPayload).darkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
   }, [settings]);
   
@@ -83,9 +90,20 @@ export default function SettingsDialog() {
   
   // Handle setting toggle
   const handleToggleSetting = (key: "darkMode" | "notifications" | "sound") => {
+    const newValue = !(localSettings[key] as boolean);
+    
+    // Apply dark mode setting immediately
+    if (key === "darkMode") {
+      if (newValue) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+    
     setLocalSettings({
       ...localSettings,
-      [key]: !(localSettings[key] as boolean)
+      [key]: newValue
     });
   };
   

@@ -56,3 +56,58 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Chat application specific styles with dark mode support */
+.dark .bg-white {
+  @apply bg-gray-800;
+}
+
+.dark .text-gray-900 {
+  @apply text-gray-100;
+}
+
+.dark .text-gray-800 {
+  @apply text-gray-200;
+}
+
+.dark .text-gray-700 {
+  @apply text-gray-300;
+}
+
+.dark .text-gray-600 {
+  @apply text-gray-400;
+}
+
+.dark .text-gray-500 {
+  @apply text-gray-400;
+}
+
+.dark .border-gray-200 {
+  @apply border-gray-700;
+}
+
+.dark .bg-gray-50 {
+  @apply bg-gray-900;
+}
+
+.dark .bg-gray-100 {
+  @apply bg-gray-900;
+}
+
+.dark .bg-blue-50 {
+  @apply bg-blue-900 bg-opacity-20;
+}
+
+.dark .hover\:bg-gray-50:hover {
+  @apply hover:bg-gray-700;
+}
+
+/* Messages in dark mode */
+.dark .bg-white.text-gray-800 {
+  @apply bg-gray-700 text-gray-200;
+}
+
+/* Settings dialog */
+.dark .bg-gray-200 {
+  @apply bg-gray-700;
+}
