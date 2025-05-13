@@ -10,7 +10,8 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
 import { AuthProvider } from "@/hooks/use-auth";
-import { ThemeProvider } from "@/components/theme-provider";
+// We'll implement the theme provider later
+// import { ThemeProvider } from "@/components/theme-provider";
 
 function Router() {
   return (
@@ -45,14 +46,12 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="theme">
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
